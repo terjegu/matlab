@@ -3,8 +3,9 @@
 close all;
 clear all;
 
+%% read file
+[x,f_s]=wavread('data/000358_JF.wav');
 
-[x,f_s,WMODE,FIDX]=readwav('data/000358_JF.wav');
 
 %% LPC
 lpc_order = 12;
@@ -15,39 +16,49 @@ F = enframe(x,inc); % Splits the singla into frames of 20ms
 [m,n] = size(F);
 
 % Make AR(12) coefficients
-X_lpc = zeros(m,lpc_order + 1);
+X_lpc = lpc(F',lpc_order);
+
+
+% Subtract estimated signal from real signal
+error = zeros(m,n);
 for i=1:m
-    X_lpc(i,:) = lpc(F(i,:),lpc_order);
+    error(i,:) = filter([1 X_lpc(i,2:end)], 1, F(i,:));
 end
 
-% Estimate signal from LPC
-x_est = filter([0 -X_lpc(1,2:end)], 1, F(1,:));
-
-% Subtract estimated signal from original signal
-error = F(1,:) - x_est;
-
-
-figure(1)
-plot(F(1,:),'r')
-hold on;
-plot(x_est)
-plot(abs(error),'g')
-title('Error signal before transformation');
 
 %% Transformation LPC
-Y_lpc = zeros(m,lpc_order);
-% status = lpcconv('rr','rf',X_lpc,Y_lpc,12);
+X_rc = zeros(m,lpc_order);
+for i=1:m
+    X_rc(i,:) = poly2rc(X_lpc(i,:));
+end
+% status = lpcconv('ar','rf',X_lpc,Y_lpc,12);
 
 
 %% Transform features
 
 
 %% Transform LPC back
+Y_lpc = zeros(m,lpc_order+1);
+for i=1:m
+    Y_lpc(i,:) = rc2poly(X_rc(i,:));
+end
 
 
-%% x_reset
-x_rest = filter([0 -Y_lpc(1,2:end)], 1, F(1,:));
+%% Inverse filter
+x_rest = zeros(m,n);
+for i=1:m
+    x_rest(i,:) = filter(1, [1 Y_lpc(i,2:end)], error(i,:));
+end
 
-F_out = error + x_rest;
 
-% concat
+%% concat
+y = [];
+for i=1:m
+   y = [y x_rest(i,:)]; 
+end
+y = y';
+
+
+%% write file
+
+wavwrite(y,f_s,'data/000358_JF_out.wav')

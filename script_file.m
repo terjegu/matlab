@@ -1,21 +1,33 @@
 %% SCRIPT FILE
 % Terje Gundersen 15.09.2009
+% Last updated 22.09.2009
 close all;
 clear all;
 
-%% read file
+%% Read file
 [x,f_s]=wavread('data/000358_JF.wav');
 
 
-%% LPC
-lpc_order = 12;
+%% Split file in 20ms segments
 window_size = 20e-3; % 20ms
-inc = f_s * window_size; % number of frames
+inc = f_s * window_size; % samples per frame
+N_loop = floor(length(x)/inc);
 
-F = enframe(x,inc); % Splits the singla into frames of 20ms
+F = [];
+for i=1:N_loop
+   F(i,:) = x(1+inc*(i-1):inc*i); 
+end
+
+if N_loop < length(x)/inc
+   test(N_loop+1,:) = x(inc*N_loop:end); 
+end
+
+% Dimensions
 [m,n] = size(F);
 
-% Make AR(12) coefficients
+
+%% Make AR(12) coefficients
+lpc_order = 12;
 X_lpc = lpc(F',lpc_order);
 
 
@@ -51,7 +63,7 @@ for i=1:m
 end
 
 
-%% concat
+%% Concatenate matrix to one vector
 y = [];
 for i=1:m
    y = [y x_rest(i,:)]; 
@@ -59,6 +71,5 @@ end
 y = y';
 
 
-%% write file
-
+%% Write file
 wavwrite(y,f_s,'data/000358_JF_out.wav')

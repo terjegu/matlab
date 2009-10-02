@@ -48,13 +48,25 @@ gm_obj = gmdistribution.fit(X_rc,N_class,'CovType','diagonal'); % EM-alg
 %% Matrices
 P = posterior(gm_obj,X_rc); % Posterior probability
 
-x_mu_sigma = zeros(m,N_class);
-for i=1:m
-    for j=1:N_class
-        x_mu_sigma(i,j) = (X_rc(i,:)-gm_obj.mu(j,:))*(1./gm_obj.Sigma(1,:,j))';
+% Convert the vector Sigma into a diagonal matrix and invert it.
+sigma = zeros(lpc_order,lpc_order,N_class);
+for i=1:N_class
+    for j=1:lpc_order
+        sigma(j,j,i) = 1./gm_obj.Sigma(1,j,i);
     end
 end
 
-D = P.*x_mu_sigma;
+% Calculate the matrix D = P(C|x) * (x-mu)^T * Sigma^-1
+D = zeros(m,N_class*lpc_order);
+for i=1:m
+    for j=1:N_class
+        D(i,1+(j-1)*lpc_order:j*lpc_order) =...
+            P(i,j)*(X_rc(i,:)-gm_obj.mu(j,:)) * sigma(:,:,j);
+    end
+end
+
 
 %% Conversion Function
+% param = inv([P';D']*[P D])*[P';D']*y
+% V = param(1:N_class,:);
+% Gamma = param(N_class:end,:);

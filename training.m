@@ -18,49 +18,47 @@ for i=1:N_loop
 end
 
 if N_loop < length(x)/inc
-   test(N_loop+1,:) = x(inc*N_loop:end); 
+   F(N_loop+1,:) = x(inc*N_loop+1:end); 
 end
 
 % Dimensions
-[m,n] = size(F);
+[n,p_lpc] = size(F);
 
 
-%% Make AR(12) coefficients
-lpc_order = 12;
-X_lpc = lpc(F',lpc_order);
+%% Make AR(p) coefficients
+p = 12; % LPC order
+X_lpc = lpc(F',p);
 
 
 %% Transformation LPC --> RC
-X_rc = zeros(m,lpc_order);
-for i=1:m
+X_rc = zeros(n,p);
+for i=1:n
     X_rc(i,:) = poly2rc(X_lpc(i,:));
 end
 % status = lpcconv('ar','rf',X_lpc,Y_lpc,12);
 
 
 %% EM algorithm
-N_class = 5;
-P = zeros(m,N_class);
-
-gm_obj = gmdistribution.fit(X_rc,N_class,'CovType','diagonal'); % EM-alg
+m = 5; % Number of mixture models
+gm_obj = gmdistribution.fit(X_rc,m,'CovType','diagonal'); % EM-alg
 
 
 %% Matrices
 P = posterior(gm_obj,X_rc); % Posterior probability
 
 % Convert the vector Sigma into a diagonal matrix and invert it.
-sigma = zeros(lpc_order,lpc_order,N_class);
-for i=1:N_class
-    for j=1:lpc_order
+sigma = zeros(p,p,m);
+for i=1:m
+    for j=1:p
         sigma(j,j,i) = 1./gm_obj.Sigma(1,j,i);
     end
 end
 
 % Calculate the matrix D = P(C|x) * (x-mu)^T * Sigma^-1
-D = zeros(m,N_class*lpc_order);
-for i=1:m
-    for j=1:N_class
-        D(i,1+(j-1)*lpc_order:j*lpc_order) =...
+D = zeros(n,m*p);
+for i=1:n
+    for j=1:m
+        D(i,1+(j-1)*p:j*p) =...
             P(i,j)*(X_rc(i,:)-gm_obj.mu(j,:)) * sigma(:,:,j);
     end
 end
@@ -68,5 +66,5 @@ end
 
 %% Conversion Function
 % param = inv([P';D']*[P D])*[P';D']*y
-% V = param(1:N_class,:);
-% Gamma = param(N_class:end,:);
+% V = param(1:m,:);
+% Gamma = param(m:end,:);

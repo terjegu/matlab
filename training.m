@@ -110,25 +110,30 @@ end
 % end
 %% reconstruct
 % 
-% X_lpc_new = zeros(n,p+1);
-% for i=1:n
-%     X_lpc_new(i,:) = rc2poly(X_conv(i,:));
-% end
+X_conv = X_conv./max(max(X_conv));
+X_conv = X_conv*0.9999;
+
+X_lpc_new = zeros(n,p+1);
+for i=1:n
+    X_lpc_new(i,:) = rc2poly(X_conv(i,:));
+end
+
+error = zeros(n,frame_length);
+for i=1:n
+    error(i,:) = filter([1 X_lpc(i,2:end)], 1, F_x(i,:));
+end
+
+X_rest = zeros(n,frame_length);
+for i=1:n
+    X_rest(i,:) = filter(1, [1 X_lpc_new(i,2:end)], error(i,:));
+end
+
+X_final = [];
+for i=1:n
+   X_final = [X_final; X_rest(i,:)']; 
+end
 % 
-% error = zeros(n,frame_length);
-% for i=1:n
-%     error(i,:) = filter([1 X_lpc(i,2:end)], 1, F_x(i,:));
-% end
-% 
-% X_rest = zeros(n,frame_length);
-% for i=1:n
-%     X_rest(i,:) = filter(1, [1 X_lpc_new(i,2:end)], error(i,:));
-% end
-% 
-% X_final = [];
-% for i=1:n
-%    X_final = [X_final; X_rest(i,:)']; 
-% end
-% % 
-% 
-% wavwrite(X_final,f_s,'data/test.wav')
+X_final = X_final./max(X_final);
+X_final = X_final*0.9999;
+
+wavwrite(X_final,f_s,'data/test.wav')

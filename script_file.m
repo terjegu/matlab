@@ -1,6 +1,5 @@
 %% SCRIPT FILE
 % Terje Gundersen 15.09.2009
-% Last updated 22.09.2009
 close all;
 clear all;
 

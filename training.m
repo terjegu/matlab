@@ -47,93 +47,87 @@ Y_lpc = lpc(F_y',p);
 
 
 %% Transformation LPC --> RC
-X_rc = zeros(n,p);
+X_lsf = zeros(n,p);
 for i=1:n
-    X_rc(i,:) = poly2rc(X_lpc(i,:));
+    X_lsf(i,:) = poly2lsf(X_lpc(i,:));
 end
-Y_rc = zeros(n,p);
+Y_lsf = zeros(n,p);
 for i=1:n
-    Y_rc(i,:) = poly2rc(Y_lpc(i,:));
+    Y_lsf(i,:) = poly2lsf(Y_lpc(i,:));
 end
 
 
 %% EM algorithm
 m = 8; % Number of mixture models
-gm_obj = gmdistribution.fit(X_rc,m,'CovType','diagonal'); % EM-alg
+gm_obj = gmdistribution.fit(X_lsf,m,'CovType','diagonal'); % EM-alg
 
 
 %% Matrices
-P = posterior(gm_obj,X_rc); % Posterior probability
+P = posterior(gm_obj,X_lsf); % Posterior probability
 
 % Convert the vector Sigma into a diagonal matrix and invert it.
-sigma_inv = zeros(p,p,m);
+sigma_diag = zeros(m,p);
 for i=1:m
-    for j=1:p
-        sigma_inv(j,j,i) = 1./gm_obj.Sigma(1,j,i);
-    end
+	sigma_diag(i,:) = 1./gm_obj.Sigma(1,:,i);
 end
 
-% Calculate the matrix D = P(C|x) * (x-mu)^T * Sigma^-1
-D = zeros(n,p*m);
-for i=1:n
-    for j=1:m
-        D(i,1+(j-1)*p:j*p) =...
-            P(i,j)*(X_rc(i,:)-gm_obj.mu(j,:)) * sigma_inv(:,:,j);
-    end
-end
-
-
-%% Conversion variables
-param = ([P';D']*[P D])\[P';D']*Y_rc;
-V = param(1:m,:);
-Gamma = param((m+1):end,:);
-
-
-%% Conversion function
+% Compute V and Gamma for each p and apply transfer function
 X_conv = zeros(n,p);
-
 for i=1:n
-    for j=1:m
-        var = Gamma(1+(j-1)*p:j*p,:)*sigma_inv(:,:,j)*...
-            (X_rc(i,:)-gm_obj.mu(j,:))';
-        brackets = var' + V(j,:);
-        X_conv(i,:) = X_conv(i,:)+P(i,j)*brackets;
+    for k=1:p
+        [V,Gamma] = param(k,n,m,P,X_lsf,Y_lsf,gm_obj,sigma_diag); 
+        X_conv(i,k) = sum(P(i,:).*(Gamma(:).*(X_lsf(i,k)-gm_obj.mu(:,k)).*sigma_diag(:,k)+V(:))');
     end
 end
 
-%% test
-% test = zeros(p,p,m);
-% for i=1:p
-%     for j=1:m
-%         test(:,:,j) = Gamma(1+(j-1)*p:j*p,:)*sigma_inv(:,:,j);
+
+%% normalise
+% for i=1:n
+%     for j=1:p
+%         if X_conv(i,j)>pi
+%             X_conv(i,j)=pi*0.999;
+%         elseif X_conv(i,j)<0
+%             X_conv(i,j)=0;
+%         end
 %     end
 % end
-%% reconstruct
-% 
-X_conv = X_conv./max(max(X_conv));
-X_conv = X_conv*0.9999;
 
+
+%% reconstruct
+% LSF to LPC
 X_lpc_new = zeros(n,p+1);
 for i=1:n
-    X_lpc_new(i,:) = rc2poly(X_conv(i,:));
+    X_lpc_new(i,:) = lsf2poly(X_conv(i,:));
 end
-
+% 
+% Extract error signal from x
 error = zeros(n,frame_length);
 for i=1:n
     error(i,:) = filter([1 X_lpc(i,2:end)], 1, F_x(i,:));
 end
 
-X_rest = zeros(n,frame_length);
+% inverse filter with error to get y
+Y = zeros(n,frame_length);
 for i=1:n
-    X_rest(i,:) = filter(1, [1 X_lpc_new(i,2:end)], error(i,:));
+    Y(i,:) = filter(1, [1 X_lpc_new(i,2:end)], error(i,:));
 end
 
 X_final = [];
 for i=1:n
-   X_final = [X_final; X_rest(i,:)']; 
+   X_final = [X_final; Y(i,:)']; 
 end
-% 
-X_final = X_final./max(X_final);
-X_final = X_final*0.9999;
 
+% X_final = X_final./max(X_final);
+% for i=1:length(X_final)
+%     if X_final(i) > 0.5
+%         X_final(i) = 0.5;
+%     elseif X_final(i) < -0.5
+%         X_final(i) = -0.5;
+%     end
+% end
+% close all;
+figure(1)
+plot(X_final);
+figure(2)
+plot(x,'r');
 wavwrite(X_final,f_s,'data/test.wav')

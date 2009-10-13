@@ -1,6 +1,7 @@
-function [V,Gamma] = param(k,n,m,P,X_lsf,Y_lsf,gm_obj,sigma_diag)
+function [V,Gamma] = param(k,m,P,X_lsf,Y_lsf,gm_obj,sigma_diag)
 
 % Calculate the matrix D = P(C|x) * (x-mu)^T * Sigma^-1
+n = length(X_lsf);
 D = zeros(n,m);
 for l=1:n
 	D(l,:) = (X_lsf(l,k)-gm_obj.mu(:,k)).*sigma_diag(:,k);

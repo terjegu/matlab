@@ -1,4 +1,4 @@
-%% SCRIPT FILE
+%% TRAINING
 % Terje Gundersen 15.09.2009
 close all;
 clear all;
@@ -71,63 +71,13 @@ for i=1:m
 	sigma_diag(i,:) = 1./gm_obj.Sigma(1,:,i);
 end
 
-% Compute V and Gamma for each p and apply transfer function
-X_conv = zeros(n,p);
-for i=1:n
-    for k=1:p
-        [V,Gamma] = param(k,n,m,P,X_lsf,Y_lsf,gm_obj,sigma_diag); 
-        X_conv(i,k) = sum(P(i,:).*(Gamma(:).*(X_lsf(i,k)-gm_obj.mu(:,k)).*sigma_diag(:,k)+V(:))');
-    end
-end
-
-
-%% normalise
+% Compute V and Gamma for each p
+V = zeros(m,p);
+Gamma = zeros(m,p);
 % for i=1:n
-%     for j=1:p
-%         if X_conv(i,j)>pi
-%             X_conv(i,j)=pi*0.999;
-%         elseif X_conv(i,j)<0
-%             X_conv(i,j)=0;
-%         end
-%     end
+for k=1:p
+	[V(:,k),Gamma(:,k)] = param(k,m,P,X_lsf,Y_lsf,gm_obj,sigma_diag); 
+end
 % end
 
-
-%% reconstruct
-% LSF to LPC
-X_lpc_new = zeros(n,p+1);
-for i=1:n
-    X_lpc_new(i,:) = lsf2poly(X_conv(i,:));
-end
-% 
-% Extract error signal from x
-error = zeros(n,frame_length);
-for i=1:n
-    error(i,:) = filter([1 X_lpc(i,2:end)], 1, F_x(i,:));
-end
-
-% inverse filter with error to get y
-Y = zeros(n,frame_length);
-for i=1:n
-    Y(i,:) = filter(1, [1 X_lpc_new(i,2:end)], error(i,:));
-end
-
-X_final = [];
-for i=1:n
-   X_final = [X_final; Y(i,:)']; 
-end
-
-% X_final = X_final./max(X_final);
-% for i=1:length(X_final)
-%     if X_final(i) > 0.5
-%         X_final(i) = 0.5;
-%     elseif X_final(i) < -0.5
-%         X_final(i) = -0.5;
-%     end
-% end
-% close all;
-figure(1)
-plot(X_final);
-figure(2)
-plot(x,'r');
-wavwrite(X_final,f_s,'data/test.wav')
+save 'variables';

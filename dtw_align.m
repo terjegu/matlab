@@ -1,4 +1,4 @@
-%% DTW
+%% TEST
 close all;
 clear all;
 
@@ -68,4 +68,4 @@ d2x = istft(D2x, 512, 512, 128);
 % soundsc([d1(1:ml),d2(1:ml)],sr)
 
 %% Write file
-wavwrite(d2x,sr,'data/test_dtw.wav')
+% wavwrite(d2x,sr,'data/test_dtw.wav')

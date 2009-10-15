@@ -34,12 +34,11 @@ end
 
 
 % Dimensions
-[n,frame_length] = size(F_x);
+[n,frame_length] = size(F_x); % SIZE(F_x) NEQ SIZE(F_y)
 
 % Make AR(p) coefficients
 X_lpc = lpc(F_x',p);
 Y_lpc = lpc(F_y',p);
-
 
 % Transformation LPC --> LSF
 X_lsf = zeros(n,p);

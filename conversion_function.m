@@ -35,13 +35,13 @@ end
 % Extract error signal from x
 error = zeros(n,frame_length);
 for i=1:n
-    error(i,:) = filter([1 X_lpc(i,2:end)], 1, F_x(i,:));
+    error(i,:) = filter(X_lpc(i,:),1,F_x(i,:));
 end
 
 % inverse filter with error to get y
 Y = zeros(n,frame_length);
 for i=1:n
-    Y(i,:) = filter(1, [1 X_lpc_new(i,2:end)], error(i,:));
+    Y(i,:) = filter(1,X_lpc_new(i,:),error(i,:));
 end
 
 X_final = [];

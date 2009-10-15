@@ -15,15 +15,17 @@ ml = min(length(d1),length(d2));
 %% Calculate STFT features for both sounds (25% window overlap)
 D1 = spectrogram(d1,512,384,512,sr);
 D2 = spectrogram(d2,512,384,512,sr);
-% D1 = specgram(d1,512,sr,512,384);
+% D1x = specgram(d1,512,sr,512,384);
+% D2x = specgram(d2,512,sr,512,384);
 
 %% Construct the 'local match' scores matrix as the cosine distance 
 % between the STFT magnitudes
-SM = simmx(abs(D1),abs(D2));
+SM = simmx2(abs(D1),abs(D2));
+% SM = simmx(abs(D1),abs(D2));
 % Look at it:
 subplot(121)
-imagesc(SM)
-colormap(1-gray)
+imagesc(SM);
+colormap(1-gray);
 % You can see a dark stripe (high similarity values) approximately
 % down the leading diagonal.
 

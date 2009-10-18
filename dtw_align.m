@@ -1,4 +1,4 @@
-%% TEST
+%% DTW ALIGN
 close all;
 clear all;
 
@@ -23,6 +23,7 @@ D2 = spectrogram(d2,512,384,512,sr);
 SM = simmx2(abs(D1),abs(D2));
 % SM = simmx(abs(D1),abs(D2));
 % Look at it:
+figure(1)
 subplot(121)
 imagesc(SM);
 colormap(1-gray);

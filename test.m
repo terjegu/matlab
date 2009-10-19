@@ -6,8 +6,11 @@ clear all;
 [d1,sr] = wavread('data/t01s000228.wav');
 [d2,sr2] = wavread('data/t03s000228.wav');
 
+A = kannumfcc(20,d1,sr);
+B = kannumfcc(20,d2,sr2);
+
 % Listen to them together:
-ml = min(length(d1),length(d2));
+% ml = min(length(d1),length(d2));
 % soundsc(d1(1:ml)+d2(1:ml),sr)
 % or, in stereo
 % soundsc([d1(1:ml),d2(1:ml)],sr)
@@ -19,7 +22,7 @@ D2 = spectrogram(d2,512,384,512,sr);
 
 %% Construct the 'local match' scores matrix as the cosine distance 
 % between the STFT magnitudes
-SM = simmx(abs(D1),abs(D2));
+SM = simmx3(A,B);
 % Look at it:
 subplot(121)
 imagesc(SM)

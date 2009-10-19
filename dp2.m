@@ -26,7 +26,8 @@ for i = 2:r+1;
     kk1 = 2;
     kk2 = 1;
     dd = D(i,j);
-    [dmax, tb] = min([D(i-1, j-1)+dd, D(max(1,i-2), j-1)+dd*kk1, D(i-1, max(1,j-2))+dd*kk1, D(i-1,j)+kk2*dd, D(i,j-1)+kk2*dd]);
+    [dmax, tb] = min([D(i-1, j-1)+dd, D(max(1,i-2), j-1)+dd*kk1,...
+        D(i-1, max(1,j-2))+dd*kk1, D(i-1,j)+kk2*dd, D(i,j-1)+kk2*dd]);
     D(i,j) = dmax;
     phi(i,j) = tb;
   end
@@ -37,7 +38,7 @@ i = r+1;
 j = c+1;
 p = i;
 q = j;
-while i > 2 & j > 2
+while i > 2 && j > 2
   tb = phi(i,j);
   if (tb == 1)
     i = i-1;
@@ -50,12 +51,12 @@ while i > 2 & j > 2
     i = i-1;
   elseif (tb == 4)
     i = i-1;
-    j = j;
+    %j = j;
   elseif (tb == 5)
     j = j-1;
-    i = i;
+    %i = i;
   else    
-    error;
+    error('dp error');
   end
   p = [i,p];
   q = [j,q];

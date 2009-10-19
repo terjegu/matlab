@@ -32,7 +32,7 @@ i = r;
 j = c;
 p = i;
 q = j;
-while i > 1 & j > 1
+while i > 1 && j > 1
   tb = phi(i,j);
   if (tb == 1)
     i = i-1;
@@ -42,7 +42,7 @@ while i > 1 & j > 1
   elseif (tb == 3)
     j = j-1;
   else    
-    error;
+    error('dp error');
   end
   p = [i,p];
   q = [j,q];

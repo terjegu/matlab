@@ -1,26 +1,17 @@
-function M = simmx2(A,B)
+function M = simmx3(A,B)
 % M = simmx2(A,B) calculate a sim matrix 
 % between MFCC feature matrices A and B.
 
-[m,na] = size(A); % m segments of length na
-nb = size(B,2); % m segments of length nb
-
-A_cep = zeros(m,na);
-B_cep = zeros(m,nb);
-
-for i=1:m
-    A_cep(i,:) = ifft(log(A(i,:)));
-    B_cep(i,:) = ifft(log(B(i,:)));
-end
+na = length(A); % m segments of length na
+nb = length(B); % m segments of length nb
 
 M = zeros(na,nb);
 for i = 1:na
 	for j = 1:nb
-        temp = A_cep(1:20,i)-B_cep(1:20,j);
-        M(i,j) = norm(temp);
+        M(i,j) = norm(A(i,:)-B(j,:));
 	end
 end
-M = M/m;
+M = M./(max(max(M))+1);
 
 end
 

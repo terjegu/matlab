@@ -34,24 +34,30 @@ colormap(1-gray)
 % opposite corners of the cost matrix
 % Note that we use 1-SM because dp will find the *lowest* total cost
 [p,q,C] = dp2(1-SM);
+
 % Overlay the path on the local similarity matrix
-hold on; plot(q,p,'r'); hold off
+hold on; 
+plot(q,p,'r'); 
+hold off
 % Path visibly follows the dark stripe
 
 %% Plot the minimum-cost-to-this point matrix too
 subplot(122)
 imagesc(C)
-hold on; plot(q,p,'r'); hold off
+hold on; 
+plot(q,p,'r'); 
+hold off
 
 %% Bottom right corner of C gives cost of minimum-cost alignment of the two
-C(size(C,1),size(C,2));
+C(end,end)
 % This is the value we would compare between different 
 % templates if we were doing classification.
 
 %% Calculate the frames in D2 that are indicated to match each frame
 % in D1, so we can resynthesize a warped, aligned version
-D2i1 = zeros(1, size(D1,2));
-for i = 1:length(D2i1)
+n = size(D1,2);
+D2i1 = zeros(1,n);
+for i = 1:n
     D2i1(i) = q(find(p >= i,1)); 
 end
 % Phase-vocoder interpolate D2's STFT under the time warp
@@ -71,4 +77,4 @@ d2x = istft(D2x, 512, 512, 128);
 % soundsc([d1(1:ml),d2(1:ml)],sr)
 
 %% Write file
-wavwrite(d2x,sr,'data/test_dtw.wav')
+wavwrite(d2x,sr,'data/test_dtw2.wav')

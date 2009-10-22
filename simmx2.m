@@ -16,7 +16,7 @@ end
 M = zeros(na,nb);
 for i = 1:na
 	for j = 1:nb
-        temp = A_cep(1:20,i)-B_cep(1:20,j);
+        temp = A_cep(i,1:20)-B_cep(1:20,j);
         M(i,j) = norm(temp);
 	end
 end

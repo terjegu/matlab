@@ -9,7 +9,7 @@ clear all;
 
 
 %% Split file in 20ms segments
-p = 12; % LPC order
+p = 16; % LPC order
 [X_lsf,Y_lsf,n,frame_length,X_lpc,F_x] = makelsf(x,y,f_s,p);
 
 
@@ -44,10 +44,8 @@ for i=1:n
     Y(i,:) = filter(1,X_lpc_new(i,:),error(i,:));
 end
 
-X_final = [];
-for i=1:n
-   X_final = [X_final; Y(i,:)']; 
-end
+X_final = Y';
+X_final = X_final(:);
 
 figure(1)
 plot(X_final);

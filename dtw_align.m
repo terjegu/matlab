@@ -20,7 +20,7 @@ D2 = spectrogram(d2,512,384,512,sr);
 
 %% Construct the 'local match' scores matrix as the cosine distance 
 % between the STFT magnitudes
-SM = simmx2(abs(D1),abs(D2));
+SM = simmx(abs(D1),abs(D2));
 % SM = simmx(abs(D1),abs(D2));
 % Look at it:
 figure(1)
@@ -78,4 +78,4 @@ d2x = istft(D2x, 512, 512, 128);
 % soundsc([d1(1:ml),d2(1:ml)],sr)
 
 %% Write file
-wavwrite(d2x,sr,'data/test_dtw.wav')
+% wavwrite(d2x,sr,'data/test_dtw.wav')

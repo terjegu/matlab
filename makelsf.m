@@ -40,6 +40,7 @@ end
 X_lpc = lpc(F_x',p);
 Y_lpc = lpc(F_y',p);
 
+
 % Transformation LPC --> LSF
 X_lsf = zeros(n,p);
 for i=1:n

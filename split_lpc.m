@@ -4,7 +4,6 @@ function [X_lpc,E,F_x] = split_lpc(x,f_s,p)
 window_size = 10e-3; % 20ms
 inc = f_s * window_size; % samples per frame
 
-
 % Source vector
 N_x = length(x);
 N_loop = floor(N_x/inc);

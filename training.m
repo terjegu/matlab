@@ -9,7 +9,7 @@ clear all;
 
 
 %% Split file in 20ms segments and convert to LSF vectors
-p = 12; % LPC order
+p = 16; % LPC order
 [X_lsf,Y_lsf,n,frame_length] = makelsf(x,y,f_s,p);
 
 
@@ -30,10 +30,9 @@ end
 % Compute V and Gamma for each p
 V = zeros(m,p);
 Gamma = zeros(m,p);
-% for i=1:n
+
 for k=1:p
 	[V(:,k),Gamma(:,k)] = param(k,m,P,X_lsf,Y_lsf,gm_obj,sigma_diag); 
 end
-% end
 
 save 'variables';

@@ -1,7 +1,7 @@
 function [X_lpc,E,F_x] = split_lpc(x,f_s,p)
 
 
-window_size = 10e-3; % 20ms
+window_size = 10e-3; % 10ms
 inc = f_s * window_size; % samples per frame
 
 % Source vector

@@ -1,22 +1,30 @@
 %% TRAINING
-% Terje Gundersen 15.09.2009
+% Terje Gundersen 29.10.2009
 close all;
 clear all;
 
 %% Read file
-[x,f_s]=wavread('data/t01s000228.wav');
-[y,fs_y]=wavread('data/t03s000228.wav');
+[y,fs]=wavread('data/t01s000228.wav');
+[x,fs_y]=wavread('data/t03s000228.wav');
 
+[Y,X] = lpcdtw(y,x,fs); % returns time aligned lpc coefficients
 
-%% Split file in 20ms segments and convert to LSF vectors
-p = 16; % LPC order
-[X_lsf,Y_lsf,n,frame_length] = makelsf(x,y,f_s,p);
+%% Convert LPC to LSF
+% Transformation LPC --> LSF
+[fn,fl] = size(X);
+p = fl-1;
+X_lsf = zeros(fn,p);
+for i=1:fn
+    X_lsf(i,:) = poly2lsf(X(i,:));
+end
 
+Y_lsf = zeros(fn,p);
+for i=1:fn
+    Y_lsf(i,:) = poly2lsf(Y(i,:));
+end
 
-%% EM algorithm
-m = 8; % Number of mixture models
-gm_obj = gmdistribution.fit(X_lsf,m,'CovType','diagonal'); % EM-alg
-
+%% Load GMM
+load 'gmm';
 
 %% Matrices
 P = posterior(gm_obj,X_lsf); % Posterior probability
@@ -35,4 +43,4 @@ for k=1:p
 	[V(:,k),Gamma(:,k)] = param(k,m,P,X_lsf,Y_lsf,gm_obj,sigma_diag); 
 end
 
-save 'variables';
+save('variables','V','Gamma','P','sigma_diag');

@@ -4,15 +4,14 @@ close all;
 clear all;
 load 'variables';
 load 'gmm';
+
 %% Read file
 [y,fs]=wavread('data/t01s000228.wav');
 [x,fs_y]=wavread('data/t03s000228.wav');
 
-
-[Y,X,K1,index,len] = lpcdtw(y,x,fs); % returns time aligned lpc coefficients
+[Y,X,K1,index,len] = lpcdtw(y,x,fs); % returns time aligned lp coefficients
 
 %% Convert LPC to LSF
-% Transformation LPC --> LSF
 [fn,fl] = size(X);
 p = fl-1;
 X_lsf = zeros(fn,p);
@@ -35,39 +34,21 @@ for i=1:fn
 end
 
 
-%% reconstruct 
-% LSF to LPC
-X_lpc_new = zeros(fn,p+1);
+%% Reconstruct 
+X_lpc_new = zeros(fn,p+1);              % LSF to LPC
 for i=1:fn
     X_lpc_new(i,:) = lsf2poly(X_conv(i,:));
 end
 
+overlap=K1(1,2)-K1(2,1)+1;              % end frame1- start frame2 + 1
+X_s = split(x,len,floor(overlap/2));    % Vector to matrix
+X_new = X_s(index,:);                   % DTW resulting matrix
 
-%%
-overlap=K1(1,2)-K1(2,1)+1; % end frame1- start frame2 + 1
-X_s = split(x,len,floor(overlap/2));
-X_new = X_s(index,:);
+e2 = lpcfilt(X_new,X_lpc_new);          % error signal
+X2 = lpcifilt2(e2,X_lpc_new);           % reconstructed matrix
+x2 = concat(X2,len,floor(overlap/2));	% matrix to vector
 
-e2 = lpcfilt(X_new,X_lpc_new); % error signal
-X2 = lpcifilt2(e2,X_lpc_new); % reconstructed matrix
-x2 = concat(X2,len,floor(overlap/2)); % matrix to vector
-
-%% Extract error signal from x
-% error = zeros(fn,frame_length);
-% for i=1:fn
-%     error(i,:) = filter(X_lpc(i,:),1,F_x(i,:));
-% end
-% 
-% % inverse filter with error to get y
-% Y = zeros(n,frame_length);
-% for i=1:n
-%     Y(i,:) = filter(1,X_lpc_new(i,:),error(i,:));
-% end
-
-% X_final = Y';
-% X_final = X_final(:);
-
-%%
+%% Plot and write to file
 % NFFT = pow2(nextpow2(length(x)));
 % f = fs/2*linspace(0,1,NFFT/2+1);
 % F_x = abs(fft(x,131072));
@@ -97,6 +78,5 @@ x2 = concat(X2,len,floor(overlap/2)); % matrix to vector
 % subplot(212);
 % plot(f,F_x(1:NFFT/2+1),'g')
 % title('Frequency domain');
-
 
 wavwrite(x2,fs,'data/test.wav')

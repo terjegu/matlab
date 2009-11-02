@@ -6,7 +6,7 @@ D = zeros(n,m);
 for l=1:n
 	D(l,:) = (X_lsf(l,k)-gm_obj.mu(:,k)).*sigma_diag(:,k);
 end
-D = D.*P;
+D = P.*D;
 
 % Conversion variables
 param_vg = ([P';D']*[P D])\[P';D']*Y_lsf(:,k);

@@ -10,7 +10,6 @@ clear all;
 [Y,X] = lpcdtw(y,x,fs); % returns time aligned lpc coefficients
 
 %% Convert LPC to LSF
-% Transformation LPC --> LSF
 [fn,fl] = size(X);
 p = fl-1;
 X_lsf = zeros(fn,p);
@@ -26,7 +25,7 @@ end
 %% Load GMM
 load 'gmm';
 
-%% Matrices
+%% Compute unknown parameters
 P = posterior(gm_obj,X_lsf); % Posterior probability
 
 % Convert the vector Sigma into a diagonal matrix and invert it.

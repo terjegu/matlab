@@ -7,7 +7,6 @@ clear all;
 list = dir('data/source');
 
 %% Calculate LPC features for both sounds
-% [x,fs]=wavread('data/t01s000228.wav');
 fs = 16e3;                      % Sampling frequency
 window_size = 10e-3;            % 10ms frame length
 len = floor(fs*window_size);	% samples per frame
@@ -15,7 +14,7 @@ anal = round(1.5*len);          % samples per analysis frame (overlapping)
 p = 16;                         % LPC order (Fs/1000)
 m = 32;                         % Number of mixtures
 
-for i=4:50
+for i=3:40
     filename = {list(i,1).name};
     filename{1}                                 % print filename
     x=wavread(['data/source/',filename{1}]);	% Read wav file
@@ -28,13 +27,16 @@ for i=4:50
         X_lsf(j,:) = poly2lsf(X(j,:));          % Convert LPC to LSF
     end
 
+    % Train GMM with EM-algorithm
     if exist('gm_obj')
+        % If not first iteration
         S.mu = gm_obj.mu;
         S.Sigma = gm_obj.Sigma;
         S.PComponents = gm_obj.PComponents;
         gm_obj = gmdistribution.fit(X_lsf,m,'CovType','diagonal','Start',S,'Regularize',1e-4);
     else
-        gm_obj = gmdistribution.fit(X_lsf,m,'CovType','diagonal','Regularize',1e-5);
+        % First iteration
+        gm_obj = gmdistribution.fit(X_lsf,m,'CovType','diagonal','Regularize',1e-4);
     end
 end
 

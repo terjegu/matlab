@@ -60,8 +60,4 @@ X2 = lpcifilt2(e2,D2_new); % reconstructed matrix
 x2 = concat(X2,len,floor(overlap/2)); % matrix to vector
 
 %% Write file
-% figure(3)
-% plot(e1)
-% figure(4)
-% plot(d2)
 wavwrite(x2,sr,'data/test_dtw.wav')

@@ -12,33 +12,36 @@ window_size = 10e-3;            % 10ms frame length
 len = floor(fs*window_size);	% samples per frame
 anal = round(1.5*len);          % samples per analysis frame (overlapping)
 p = 16;                         % LPC order (Fs/1000)
-m = 32;                         % Number of mixtures
+m = 16;                          % Number of mixtures
+X_lsf = [];                     % Feature matrix used in training
 
-for i=3:40
+for i=3:10
     filename = {list(i,1).name};
-    filename{1}                                 % print filename
     x=wavread(['data/source/',filename{1}]);	% Read wav file
     X=lpcauto(x,p,[len anal]);                  % Make LPC matrix
 
     [fn,fl] = size(X);
     p = fl-1;
-    X_lsf = zeros(fn,p);
+    X_lsf_temp = zeros(fn,p);
     for j=1:fn
-        X_lsf(j,:) = poly2lsf(X(j,:));          % Convert LPC to LSF
+        X_lsf_temp(j,:) = poly2lsf(X(j,:));          % Convert LPC to LSF
     end
-
-    % Train GMM with EM-algorithm
-    if exist('gm_obj')
-        % If not first iteration
-        S.mu = gm_obj.mu;
-        S.Sigma = gm_obj.Sigma;
-        S.PComponents = gm_obj.PComponents;
-        gm_obj = gmdistribution.fit(X_lsf,m,'CovType','diagonal','Start',S,'Regularize',1e-4);
-    else
-        % First iteration
-        gm_obj = gmdistribution.fit(X_lsf,m,'CovType','diagonal','Regularize',1e-4);
-    end
+    
+    % Add to matrix
+    X_lsf = [X_lsf; X_lsf_temp];
 end
+
+%% Train GMM with EM-algorithm and kmeans for initialisation 
+% VQ for initialisation
+[S.mu,G,J]=kmeans(X_lsf,m);
+
+S.Sigma = zeros(1,p,m);
+for i=1:m
+    S.Sigma(1,:,i) = var(X_lsf(J==i));
+end
+
+% GMM with EM
+gm_obj = gmdistribution.fit(X_lsf,m,'CovType','diagonal','Start',S,'Regularize',1e-4);
 
 
 %% Save variables

@@ -3,29 +3,32 @@ function [p,q,D] = dp2(M)
 %    Use dynamic programming to find a min-cost path through matrix M.
 %    Return state sequence in p,q
 %    This version has limited slopes [2/1] .. [1/2]
-% 2003-03-15 dpwe@ee.columbia.edu
 
+% 2003-03-15 dpwe@ee.columbia.edu
 % Copyright (c) 2003 Dan Ellis <dpwe@ee.columbia.edu>
 % released under GPL - see file COPYRIGHT
 
+% Modified 2009-11-06 Terje Gundersen
+
 [r,c] = size(M);
+N_i = r+1;
+N_j = c+1;
 
 % costs
-D = zeros(r+1, c+1);
+D = zeros(N_i,N_j);
 D(1,:) = NaN;
 D(:,1) = NaN;
 D(1,1) = 0;
-D(2:(r+1), 2:(c+1)) = M;
+D(2:N_i, 2:N_j) = M;
 
-% traceback
-N_i = r+1;
-N_j = c+1;
+phi = zeros(N_i,N_j);	% traceback
+
+% Global constraints I
 lim_1 = 2/3*(N_j-N_i/2);
 lim_2 = 2/3*(2*N_i-N_j);
 open_ends = 20;
-phi = zeros(N_i,N_j);
-
-for i = 2:N_i;    
+for i = 2:N_i;
+    % Global constraints II
     border_a = floor(i/2)-open_ends;
     border_b = 2*i+open_ends;
     border_c = floor((i-N_i)/2)+N_j+open_ends;
@@ -33,21 +36,23 @@ for i = 2:N_i;
     
     if i<lim_1 && i<lim_2
         k = max(2,border_a);
-        l = min(c+1,border_b);
+        l = min(N_j,border_b);
     elseif (i<lim_1 && i>lim_2)||(i<lim_2 && i>lim_1)
         k = max(2,border_a);
         l = min(N_j,border_c);
     else
-        k = border_d;
+        k = max(2,border_d);
         l = min(N_j,border_c);
     end
 	D(i,2:k-1) = NaN;
     D(i,l+1:N_j) = NaN;
+    
+    % Cost matrix
 	for j = k:l
         % Scale the steps to discourage skipping ahead
-        kk1 = 2; % long
-        kk2 = 1; % diagonal
-        kk3 = 5; % vertical and horizontal
+        kk1 = 2;	% long
+        kk2 = 1;	% diagonal
+        kk3 = 5;	% vertical and horizontal
         dd = D(i,j);
         [dmax, tb] = min([D(i-1, j-1)+dd*kk2, D(max(1,i-2), j-1)+dd*kk1,...
             D(i-1, max(1,j-2))+dd*kk1, D(i-1,j)+kk3*dd, D(i,j-1)+kk3*dd]);
@@ -86,7 +91,7 @@ while i > 2 && j > 2
 end
 
 % Strip off the edges of the D matrix before returning
-D = D(2:(r+1),2:(c+1));
+D = D(2:N_i,2:N_j);
 
 % map down p and q
 p = p-1;

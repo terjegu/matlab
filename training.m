@@ -7,7 +7,7 @@ clear all;
 [y,fs]=wavread('data/t01s000228.wav');
 [x,fs_y]=wavread('data/t03s000228.wav');
 
-[Y,X] = lpcdtw(y,x,fs); % returns time aligned lpc coefficients
+[X,Y] = lpcdtw(x,y,fs); % returns time aligned lpc coefficients
 
 %% Convert LPC to LSF
 [fn,fl] = size(X);
@@ -25,7 +25,7 @@ end
 %% Load GMM
 load 'gmm';
 
-%% Compute unknown parameters
+%% Compute V and Gamma
 P = posterior(gm_obj,X_lsf); % Posterior probability
 
 % Convert the vector Sigma into a diagonal matrix and invert it.
@@ -42,4 +42,5 @@ for k=1:p
 	[V(:,k),Gamma(:,k)] = param(k,m,P,X_lsf,Y_lsf,gm_obj,sigma_diag); 
 end
 
+%% Save Data
 save('variables','V','Gamma','P','sigma_diag');

@@ -1,4 +1,9 @@
 function X = lpcifilt2(E,ar)
+% X = lpcifilt2(E,ar)
+% Inverse LP filtering with memory
+% X, E and ar are matrices
+
+% Terje Gundersen 01.11.2009
 
 [fn,fl] = size(E);
 X = zeros(fn,fl);

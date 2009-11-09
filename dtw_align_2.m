@@ -1,10 +1,11 @@
 %% DTW ALIGN
+% Terje Gundersen 01.11.2009
 close all;
 clear all;
 
 %% Load two speech waveforms of the same utterance
-[d1,sr] = wavread('data/t01s000228.wav');
-[d2,sr2] = wavread('data/t03s000228.wav');
+[d2,sr] = wavread('data/t01s000228.wav');
+[d1,sr2] = wavread('data/t03s000228.wav');
 
 %% Calculate LPC features for both sounds
 window_size = 10e-3; % 10ms
@@ -18,7 +19,7 @@ p = 16; % LPC order (Fs/1000)
 
 %% Construct the 'local match' scores matrix 
 SM = distitar(D1,D2);
-SM = SM./(max(max(SM))+0.1);
+SM = SM./(max(max(SM))+0.001); % scale values to [0 0.9999]
 
 figure(1)
 subplot(121)

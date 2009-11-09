@@ -6,22 +6,20 @@ load 'variables';
 load 'gmm';
 
 %% Read file
-[y,fs]=wavread('data/t01s000228.wav');
-[x,fs_y]=wavread('data/t03s000228.wav');
+[x,fs]=wavread('data/t03s000228.wav');
 
-[Y,X,K1,index,len] = lpcdtw(y,x,fs); % returns time aligned lp coefficients
+window_size = 10e-3;            % 10ms
+len = floor(fs*window_size);	% samples per frame
+anal = round(1.5*len);          % samples per analysis frame (overlapping)
+p = 16;                         % LPC order (Fs/1000)
+
+X_lpc= lpcauto(x,p,[len anal]); % LPC matrix
 
 %% Convert LPC to LSF
-[fn,fl] = size(X);
-p = fl-1;
+fn = length(X_lpc);
 X_lsf = zeros(fn,p);
 for i=1:fn
-    X_lsf(i,:) = poly2lsf(X(i,:));
-end
-
-Y_lsf = zeros(fn,p);
-for i=1:fn
-    Y_lsf(i,:) = poly2lsf(Y(i,:));
+    X_lsf(i,:) = poly2lsf(X_lpc(i,:));
 end
 
 %% Conversion function
@@ -34,26 +32,31 @@ for i=1:fn
 end
 
 %% Reconstruct 
-X_lpc_new = zeros(fn,p+1);              % LSF to LPC
+X_lpc_conv = zeros(fn,p+1);              % LSF to LPC
 for i=1:fn
-    X_lpc_new(i,:) = lsf2poly(X_conv(i,:));
+    X_lpc_conv(i,:) = lsf2poly(X_conv(i,:));
 end
 
-overlap=K1(1,2)-K1(2,1)+1;              % end frame1- start frame2 + 1
+overlap = anal-len;                       % end frame1 - start frame2 + 1
 X_s = split(x,len,floor(overlap/2));    % Vector to matrix
-X_new = X_s(index,:);                   % DTW resulting matrix
-
-e2 = lpcfilt(X_new,X_lpc_new);          % error signal
-X2 = lpcifilt2(e2,X_lpc_new);           % reconstructed matrix
+e2 = lpcfilt(X_s,X_lpc);                % error signal
+X2 = lpcifilt2(e2,X_lpc_conv);          % reconstructed matrix
 x2 = concat(X2,len,floor(overlap/2));	% matrix to vector
 
-%% Plot 1
+%% Write to file
+wavwrite(x2,fs,'data/test_conv.wav')
+
+
+%% Plot complete signal
+[y,fs_y]=wavread('data/t01s000228.wav');	% target
+
 NFFT = pow2(nextpow2(length(x)));
 f = fs/2*linspace(0,1,NFFT/2+1);
 F_x = abs(fft(x,131072));
 F_x2 = abs(fft(x2,131072));
 F_y = abs(fft(y,131072));
 
+% Converted
 figure(1)
 subplot(211);
 plot(x2);
@@ -62,6 +65,7 @@ subplot(212);
 plot(f,F_x2(1:NFFT/2+1));
 title('Frequency domain');
 
+% Target
 figure(2)
 subplot(211);
 plot(y,'r');
@@ -70,6 +74,7 @@ subplot(212);
 plot(f,F_y(1:NFFT/2+1),'r');
 title('Frequency domain');
 
+% Source
 figure(3)
 subplot(211);
 plot(x,'g');
@@ -78,29 +83,47 @@ subplot(212);
 plot(f,F_x(1:NFFT/2+1),'g')
 title('Frequency domain');
 
-%% Plot 2
+%% Plot one lpc frame
+[~,Y_lpc] = lpcdtw(x,y,fs);
+
+frame_num = 4;
+N = length(X2(frame_num,:));
+NFFT = pow2(nextpow2(N));
+t = (1:N)/fs*1000;
+frame = (N*frame_num+1:N*(frame_num+1));
+
+% Converted
+[X2_freqz,f] = freqz(X_lpc_conv(frame_num,:),1,NFFT,fs);
 figure(1)
 subplot(211);
-plot(x2(1:fs));
+plot(t,x2(frame));
 title('Converted, time domain');
+xlabel('t [ms]');
 subplot(212);
-plot(abs(freqz(X_lpc_new(1,:),1,256)));
+plot(f/1000,abs(X2_freqz));
 title('Frequency domain');
+xlabel('f [kHz]');
 
+% Target
+[Y_freqz,f] = freqz(Y_lpc(frame_num,:),1,NFFT,fs);
 figure(2)
 subplot(211);
-plot(y(1:fs),'r');
+plot(t,y(frame),'r'); % y before dtw, not correct
 title('Target, time domain');
+xlabel('t [ms]');
 subplot(212);
-plot(abs(freqz(Y(1,:),1,256)));
+plot(f/1000,abs(Y_freqz));
 title('Frequency domain');
+xlabel('f [kHz]');
 
+% Source
+[X_freqz,f] = freqz(X_lpc(frame_num,:),1,NFFT,fs);
 figure(3)
 subplot(211);
-plot(x(1:fs),'g');
+plot(t,x(frame),'g');
 title('Source, time domain');
+xlabel('t [ms]');
 subplot(212);
-plot(abs(freqz(X(1,:),1,256)));
+plot(f/1000,abs(X_freqz));
 title('Frequency domain');
-%%
-wavwrite(x2,fs,'data/test.wav')
+xlabel('f [kHz]');

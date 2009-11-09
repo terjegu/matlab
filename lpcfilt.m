@@ -1,4 +1,9 @@
 function E = lpcfilt(X,ar)
+% E = lpcfilt(X,ar)
+% LP filtering with memory
+% E, X and ar are matrices
+
+% Terje Gundersen 01.11.2009
 
 [fn,fl] = size(X);
 E = zeros(fn,fl);

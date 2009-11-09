@@ -9,7 +9,7 @@ end
 D = P.*D;
 
 % Conversion variables
-param_vg = ([P';D']*[P D])\[P';D']*Y_lsf(:,k);
+param_vg = ([P';D']*[P,D])\[P';D']*Y_lsf(:,k);
 V = param_vg(1:m);
 Gamma = param_vg((m+1):end);
 

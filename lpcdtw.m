@@ -1,7 +1,7 @@
 function [D1,D2_new,K2,index,len] = lpcdtw(d1,d2,sr)
 
 % Calculate LPC features for both sounds
-window_size = 10e-3;            % 10ms
+window_size = 15e-3;            % 15ms
 len = floor(sr*window_size);	% samples per frame
 anal = round(1.5*len);          % samples per analysis frame (overlapping)
 p = 16;                         % LPC order (Fs/1000)

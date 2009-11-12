@@ -23,15 +23,16 @@ for i=1:fn
 end
 
 %% Load GMM
-load 'gmm';
+load 'gmm64';
 
 %% Compute V and Gamma
+m = gm_obj.NComponents;
 P = posterior(gm_obj,X_lsf); % Posterior probability
 
 % Convert the vector Sigma into a diagonal matrix and invert it.
 sigma_diag = zeros(m,p);
 for i=1:m
-	sigma_diag(i,:) = 1./gm_obj.Sigma(1,:,i);
+	sigma_diag(i,:) = 1./sqrt(gm_obj.Sigma(1,:,i));
 end
 
 % Compute V and Gamma for each p
@@ -43,4 +44,4 @@ for k=1:p
 end
 
 %% Save Data
-save('variables','V','Gamma','P','sigma_diag');
+save('variables64','V','Gamma','P','sigma_diag');

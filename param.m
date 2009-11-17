@@ -1,4 +1,6 @@
 function [V,Gamma] = param(k,m,P,X_lsf,Y_lsf,gm_obj,sigma_diag)
+% [V,Gamma] = param(k,m,P,X_lsf,Y_lsf,gm_obj,sigma_diag)
+%   Compute V and Gamma used in conversion_function
 
 % Calculate the matrix D = P(C|x) * (x-mu)^T * Sigma^-1
 n = length(X_lsf);

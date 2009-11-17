@@ -1,23 +1,25 @@
-function [D1,D2_new,K2,index,len] = lpcdtw(d1,d2,sr)
+function [D1,D2_new,index] = lpcdtw(d1,d2,sr)
+% [D1,D2_new,K2,index,len] = lpcdtw(d1,d2,sr)
+%   Use dynamic programming to find the lowest-cost path between the
+%   d1 and d2.
+%   Used in training
 
 % Calculate LPC features for both sounds
-window_size = 15e-3;            % 15ms
+window_size = 10e-3;            % 20ms
 len = floor(sr*window_size);	% samples per frame
-anal = round(1.5*len);          % samples per analysis frame (overlapping)
+anal = round(1*len);          % samples per analysis frame (overlapping)
 p = 16;                         % LPC order (Fs/1000)
 
-[D1]=lpcauto(d1,p,[len anal]);
-[D2,~,K2]=lpcauto(d2,p,[len anal]);
+D1=lpcauto(d1,p,[len anal]);
+D2=lpcauto(d2,p,[len anal]);
 
 
 % Construct the 'local match' scores matrix 
 SM = distitar(D1,D2);
-SM = SM./(max(max(SM))+0.1);
+SM = SM./(max(SM(:))+0.1);
 
-% Shortest path 
 % Use dynamic programming to find the lowest-cost path between the 
 % opposite corners of the cost matrix
-% Note that we use 1-SM because dp will find the *lowest* total cost
 [p,q,~] = dp2(1-SM);
 
 % Calculate the frames in D2 that are indicated to match each frame

@@ -1,7 +1,8 @@
 function E = lpcfilt(X,ar)
 % E = lpcfilt(X,ar)
-% LP filtering with memory
-% E, X and ar are matrices
+%   LP filtering with memory
+%   E, X and ar are matrices
+%   Used in conversion_function.m to resynthesize converted signal
 
 % Terje Gundersen 01.11.2009
 

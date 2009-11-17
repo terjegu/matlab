@@ -23,7 +23,7 @@ for i=1:fn
 end
 
 %% Load GMM
-load 'gmm64';
+load 'gmm128';
 
 %% Compute V and Gamma
 m = gm_obj.NComponents;
@@ -44,4 +44,4 @@ for k=1:p
 end
 
 %% Save Data
-save('variables64','V','Gamma','P','sigma_diag');
+save('variables128','V','Gamma','P','sigma_diag');

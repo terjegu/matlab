@@ -1,7 +1,8 @@
 function X = lpcifilt2(E,ar)
 % X = lpcifilt2(E,ar)
-% Inverse LP filtering with memory
-% X, E and ar are matrices
+%   Inverse LP filtering with memory
+%   X, E and ar are matrices
+%   Used in conversion_function.m to resynthesize converted signal
 
 % Terje Gundersen 01.11.2009
 
@@ -12,6 +13,7 @@ X = zeros(fn,fl);
 for i=2:fn
 	[X(i,:),mem] = filter(1,ar(i,:),E(i,:),mem);
 end
+
 
 end
 

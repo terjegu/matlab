@@ -1,8 +1,8 @@
 function [p,q,D] = dp2(M)
 % [p,q,D] = dp2(M) 
-%    Use dynamic programming to find a min-cost path through matrix M.
-%    Return state sequence in p,q
-%    This version has limited slopes [2/1] .. [1/2]
+% 	Use dynamic programming to find a min-cost path through matrix M.
+% 	Return state sequence in p,q
+% 	This version has limited slopes [2/1] .. [1/2]
 
 % 2003-03-15 dpwe@ee.columbia.edu
 % Copyright (c) 2003 Dan Ellis <dpwe@ee.columbia.edu>

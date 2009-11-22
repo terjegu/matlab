@@ -8,7 +8,7 @@ clear all;
 [d2,sr2] = wavread('data/t03s000228.wav');
 
 %% Calculate LPC features for both sounds
-window_size = 15e-3; % 15ms
+window_size = 10e-3; % 15ms
 len = floor(sr*window_size); % samples per frame
 anal = round(1.5*len); % samples per analysis frame (overlapping)
 p = 16; % LPC order (Fs/1000)

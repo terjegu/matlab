@@ -41,33 +41,36 @@ end
 % overlap = anal-len;                   % end frame1 - start frame2 + 1,
 % floor(overlap/2)
 
+% X_s = split_overlap(x,len,anal-len);  % Vector to matrix
 X_s = split(x,len);                     % Vector to matrix
 e = lpcfilt(X_s,X_lpc);                 % error signal
 X2 = lpcifilt2(e,X_lpc_conv);           % reconstructed matrix
 temp = X2';
 x2 = temp(:);                           % matrix to vector
+% x2 = concat_overlap(X2,len,anal-len); % matrix to vector
 
 %% Write to file
 % x2(x2>=1) = 0.999;                    % Prevent clipping
 % x2(x2<-1) = -1;
 % 
-wavwrite(x2,fs,'data/test_conv.wav')
+% wavwrite(x2,fs,'data/test_conv.wav')
 
 %% Plot complete signal
-y=wavread('data/t01s000228.wav'); % target
-e2 = concat(e,len,0);     % error
+y=wavread('data/t01s000228.wav');   % target
+% temp = e';
+% e2 = temp(:);                       % error
 
 t_x = (1:length(x))/fs;
 t_x2 = (1:length(x2))/fs;
 t_y = (1:length(y))/fs;
-t_e2 = (1:length(e2))/fs;
+% t_e2 = (1:length(e2))/fs;
 
 NFFT = pow2(nextpow2(length(x)));
 f = fs/2/1000*linspace(0,1,NFFT/2+1);
 F_x = log10(abs(fft(x,NFFT)));
 F_x2 = log10(abs(fft(x2,NFFT)));
 F_y = log10(abs(fft(y,NFFT)));
-F_e2 = log10(abs(fft(e2,NFFT)));
+% F_e2 = log10(abs(fft(e2,NFFT)));
 
 % Converted
 figure(1)
@@ -116,9 +119,10 @@ xlabel('t [s]');
 [~,Y_lpc,index] = lpcdtw(x,y,fs);
 % Y_s = split(y,len,0);       % Vector to matrix
 % Y_s = Y_s(index);
-% y2 = concat(Y_s,len,0);     % matrix to vector
+% temp = Y_s';
+% y2 = temp(:);                   % matrix to vector
 
-frame_num = 160;
+frame_num = 120;
 N = length(X2(frame_num,:));
 NFFT = pow2(nextpow2(N));
 t = (1:N)/fs*1000;

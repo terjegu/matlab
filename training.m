@@ -4,10 +4,18 @@ close all;
 clear all;
 
 %% Read file
-[y,fs]=wavread('data/t01s000228.wav');
-[x,fs_y]=wavread('data/t03s000228.wav');
+% [y,fs]=wavread('data/t01s000228.wav');
+% [x,fs_y]=wavread('data/t03s000228.wav');
 
-[X,Y] = lpcdtw(x,y,fs); % returns time aligned lpc coefficients
+[pm_x,~] = textread('data/t03s000228.txt','%f%f');
+[x,fs] = wavread('data/t03s000228.wav');  % source
+y = wavread('data/t01s000228.wav');       % target
+[pm_y,~] = textread('data/t01s000228.txt','%f%f');
+pm_x = pm_x*fs;
+pm_y = pm_y*fs;
+
+[X,Y] = lpcdtw(x,y,pm_x,pm_y);
+% [X,Y] = lpcdtw(x,y,fs); % returns time aligned lpc coefficients
 
 %% Convert LPC to LSF
 [fn,fl] = size(X);
@@ -23,7 +31,7 @@ for i=1:fn
 end
 
 %% Load GMM
-load 'gmm128';
+load 'gmm16';
 
 %% Compute V and Gamma
 m = gm_obj.NComponents;
@@ -44,4 +52,4 @@ for k=1:p
 end
 
 %% Save Data
-save('variables128','V','Gamma','P','sigma_diag');
+save('variables16','V','Gamma','P','sigma_diag');

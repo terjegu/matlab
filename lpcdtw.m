@@ -1,34 +1,40 @@
-function [D1,D2_new,index] = lpcdtw(d1,d2,sr)
-% [D1,D2_new,K2,index,len] = lpcdtw(d1,d2,sr)
+function [X,Y_new,index,tfx] = lpcdtw(x,y,pm_x,pm_y)
+% [X,Y_new,index] = lpcdtw(x,y,pm_x,pm_y)
 %   Use dynamic programming to find the lowest-cost path between the
-%   d1 and d2.
+%   x and y.
 %   Used in training
 
-% Calculate LPC features for both sounds
-window_size = 10e-3;            % 20ms
-len = floor(sr*window_size);	% samples per frame
-anal = round(1*len);          % samples per analysis frame (overlapping)
 p = 16;                         % LPC order (Fs/1000)
+nfx = length(pm_x);
+nfy = length(pm_y);
 
-D1=lpcauto(d1,p,[len anal]);
-D2=lpcauto(d2,p,[len anal]);
+lenx = [pm_x(1); pm_x(2:nfx-1)-pm_x(1:nfx-2)];
+analx = max(256*ones(nfx-1,1),[pm_x(2);pm_x(3:nfx-1)-pm_x(1:nfx-3);length(x)-pm_x(nfx-2)]-1);
+skipx = zeros(nfx-1,1);
+tfx = [lenx analx skipx];
+
+leny = [pm_y(1); pm_y(2:nfy-1)-pm_y(1:nfy-2)];
+analy = max(256*ones(nfy-1,1),[pm_y(2);pm_y(3:nfy-1)-pm_y(1:nfy-3);length(y)-pm_y(nfy-2)]-1);
+skipy = zeros(nfy-1,1);
+tfy = [leny analy skipy];
+
+X = lpcauto(x,p,tfx);
+Y = lpcauto(y,p,tfy);
 
 
-% Construct the 'local match' scores matrix 
-SM = distitar(D1,D2);
+% Construct the 'local match' score matrix 
+SM = distitar(X,Y);
 SM = SM./(max(SM(:))+0.1);
 
-% Use dynamic programming to find the lowest-cost path between the 
-% opposite corners of the cost matrix
-[p,q,~] = dp2(1-SM);
+% Use dynamic programming to find the lowest-cost path
+[p1,q1,~] = dp2(1-SM);
 
-% Calculate the frames in D2 that are indicated to match each frame
-% in D1, so we can resynthesize a warped, aligned version
-m = length(D1);
+% Update Y with new indecies
+m = length(X);
 index = zeros(m,1);
 for i = 1:m
-    index(i) = q(find(p >= i,1));
+    index(i) = q1(find(p1 >= i,1));
 end
-D2_new = D2(index,:);
+Y_new = Y(index,:);
 
 end

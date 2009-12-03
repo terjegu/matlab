@@ -1,19 +1,29 @@
 %% CONVERSION FUNCTION
 % Terje Gundersen 13.10.2009
-close all;
+% close all;
 clear all;
 load 'variables64';
 load 'gmm64';
 
 %% Read file
 [x,fs]=wavread('data/t03s000228.wav');
+[pm,~] = textread('data/t03s000228.txt','%f%f');
 
-window_size = 10e-3;            % 20ms
-len = floor(fs*window_size);	% samples per frame
-anal = round(1*len);          % samples per analysis frame (overlapping)
+pm_x = pm*fs;
+    
+nfx = length(pm_x);
+lenx = [pm_x(1); pm_x(2:nfx-1)-pm_x(1:nfx-2)];
+analx = [pm_x(2); pm_x(3:nfx-1)-pm_x(1:nfx-3); length(x)-pm_x(nfx-1)]-1;
+skipx = zeros(nfx-1,1);
+tfx = [lenx analx skipx];
+
 p = 16;                         % LPC order (Fs/1000)
+X_lpc = lpcauto(x,p,tfx); % LPC matrix
+    
+% window_size = 10e-3;            % 20ms
+% len = floor(fs*window_size);	% samples per frame
+% anal = round(1*len);          % samples per analysis frame (overlapping)
 
-X_lpc = lpcauto(x,p,[len anal]); % LPC matrix
 
 %% Convert LPC to LSF
 fn = length(X_lpc);
@@ -38,52 +48,55 @@ for i=1:fn
     X_lpc_conv(i,:) = lsf2poly(X_conv(i,:));
 end
 
+
+e1 = lpcifilt2(x,X_lpc,tfx);     % Exitation
+x_y = lpcfilt2(e1,X_lpc_conv,tfx);    % Synthesis
+
 % overlap = anal-len;                   % end frame1 - start frame2 + 1,
 % floor(overlap/2)
-
 % X_s = split_overlap(x,len,anal-len);  % Vector to matrix
-X_s = split(x,len);                     % Vector to matrix
-e = lpcfilt(X_s,X_lpc);                 % error signal
-X2 = lpcifilt2(e,X_lpc_conv);           % reconstructed matrix
-temp = X2';
-x2 = temp(:);                           % matrix to vector
-% x2 = concat_overlap(X2,len,anal-len); % matrix to vector
+% X_s = split(x,len);                     % Vector to matrix
+% e = lpcfilt(X_s,X_lpc);                 % error signal
+% X2 = lpcifilt2(e,X_lpc_conv);           % reconstructed matrix
+% temp = X2';
+% x_y = temp(:);                           % matrix to vector
+% x_y = concat_overlap(X2,len,anal-len); % matrix to vector
 
 %% Write to file
-% x2(x2>=1) = 0.999;                    % Prevent clipping
-% x2(x2<-1) = -1;
-% 
-% wavwrite(x2,fs,'data/test_conv.wav')
+% x_y(x_y>=1) = 0.999;                    % Prevent clipping
+% x_y(x_y<-1) = -1;
+x_y = x_y-mean(x_y);
+wavwrite(x_y,fs,'data/test_conv64.wav')
 
 %% Plot complete signal
-y=wavread('data/t01s000228.wav');   % target
-% temp = e';
-% e2 = temp(:);                       % error
+% y=wavread('data/t01s000228.wav');   % target
+% % temp = e';
+% % e2 = temp(:);                       % error
+% 
+% t_x = (1:length(x))/fs;
+% t_x2 = (1:length(x_y))/fs;
+% t_y = (1:length(y))/fs;
+% % t_e2 = (1:length(e2))/fs;
+% 
+% NFFT = pow2(nextpow2(length(x)));
+% f = fs/2/1000*linspace(0,1,NFFT/2+1);
+% F_x = log10(abs(fft(x,NFFT)));
+% F_x2 = log10(abs(fft(x_y,NFFT)));
+% F_y = log10(abs(fft(y,NFFT)));
+% % F_e2 = log10(abs(fft(e2,NFFT)));
 
-t_x = (1:length(x))/fs;
-t_x2 = (1:length(x2))/fs;
-t_y = (1:length(y))/fs;
-% t_e2 = (1:length(e2))/fs;
-
-NFFT = pow2(nextpow2(length(x)));
-f = fs/2/1000*linspace(0,1,NFFT/2+1);
-F_x = log10(abs(fft(x,NFFT)));
-F_x2 = log10(abs(fft(x2,NFFT)));
-F_y = log10(abs(fft(y,NFFT)));
-% F_e2 = log10(abs(fft(e2,NFFT)));
-
-% Converted
-figure(1)
-subplot(311);
-plot(t_x,x,'g');
-title('Source, time domain');
-subplot(312);
-plot(t_y,y,'r');
-title('Target, time domain');
-subplot(313);
-plot(t_x2,x2);
-title('Converted, time domain');
-xlabel('t [s]');
+% % Converted
+% figure(1)
+% subplot(311);
+% plot(t_x,x,'g');
+% title('Source, time domain');
+% subplot(312);
+% plot(t_y,y,'r');
+% title('Target, time domain');
+% subplot(313);
+% plot(t_x2,x_y);
+% title('Converted, time domain');
+% xlabel('t [s]');
 
 % % Target
 % figure(2)
@@ -116,14 +129,17 @@ xlabel('t [s]');
 
 %% Plot one lpc frame
 [y,fs_y]=wavread('data/t01s000228.wav'); % target
-[~,Y_lpc,index] = lpcdtw(x,y,fs);
+[pm_y,~] = textread('data/t01s000228.txt','%f%f');
+pm_y = pm_y*fs;
+
+[~,Y_lpc,index] = lpcdtw(x,y,pm_x,pm_y);
 % Y_s = split(y,len,0);       % Vector to matrix
 % Y_s = Y_s(index);
 % temp = Y_s';
 % y2 = temp(:);                   % matrix to vector
 
 frame_num = 120;
-N = length(X2(frame_num,:));
+N = tfx(frame_num,1);
 NFFT = pow2(nextpow2(N));
 t = (1:N)/fs*1000;
 frame = (N*frame_num+1:N*(frame_num+1));
@@ -143,7 +159,7 @@ frame = (N*frame_num+1:N*(frame_num+1));
 % title('Target, time domain');
 % xlabel('t [ms]');
 % subplot(313);
-% plot(t,x2(frame));
+% plot(t,x_y(frame));
 % title('Converted, time domain');
 % xlabel('t [ms]');
 
@@ -169,6 +185,7 @@ title('Converted');
 xlabel('f [kHz]');
 ylabel('dB');
 
+
 % 
 % figure(7)
 % hold on;
@@ -182,8 +199,8 @@ ylabel('dB');
 % hold off;
 
 %% Compare GMM
-% save('x2_64','X2_freqz');
-
+% save('x2_16','X2_freqz');
+% 
 % figure(8)
 % load('x2_16');
 % subplot(311);

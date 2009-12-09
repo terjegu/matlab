@@ -1,5 +1,5 @@
-function [X,Y_new,index,tfx] = lpcdtw(x,y,pm_x,pm_y)
-% [X,Y_new,index] = lpcdtw(x,y,pm_x,pm_y)
+function [X,Y,index] = lpcdtw(x,y,pm_x,pm_y)
+% [X,Y,index] = lpcdtw(x,y,pm_x,pm_y)
 %   Use dynamic programming to find the lowest-cost path between the
 %   x and y.
 %   Used in training
@@ -35,6 +35,6 @@ index = zeros(m,1);
 for i = 1:m
     index(i) = q1(find(p1 >= i,1));
 end
-Y_new = Y(index,:);
+% Y_new = Y(index,:);
 
 end

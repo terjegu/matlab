@@ -7,7 +7,7 @@ function [y,exct]=psolasynth(n_x,e,pmx,pmy,nxfrms,Y,p,wrp)
 % signal is generated PSOLA style by placing the warped pitch pulses from
 % the source in positions dictated by the target's pitch pulse positions,
 % and the filter update positions placed accordingly. The LP analysis of
-% both source nd target is assumed to have been performed pitch
+% both source and target is assumed to have been performed pitch
 % synchronously.
 
 % Start by generating the excitation signal, PSOLA style, i.e. extract a

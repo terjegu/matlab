@@ -1,4 +1,4 @@
-function e=lpcifilt2(s,ar,t)
+function e=lpcifilt2(s,ar,pm)
 % e=lpcifilt2(s,ar,t)
 %   LP filtering with memory
 %   s is a vector
@@ -10,17 +10,17 @@ function e=lpcifilt2(s,ar,t)
 nf = length(ar);
 ns = length(s);
 e = zeros(ns,1);
-mem = zeros(16,1);
 
 start = 1;
-endp = round(t(1,1)+0.5*t(2,1));
-for i=1:nf-2
-    [e(start:endp),mem] = filter(ar(i,:),1,s(start:endp),mem);
+endp = round(0.5*(pm(1)+pm(2)));
+[e(start:endp),mem] = filter(ar(1,:),1,s(start:endp));
+for i=2:nf-2
     start = endp+1;
-    endp = min(round(start+0.5*(t(i+1,1)+t(i+2,1))-1),ns);
-%     pm_t = round(start+(endp-start)/2)
-%     delta = endp-start
+    endp = min(round(0.5*(pm(i)+pm(i+1))),ns);
+    [e(start:endp),mem] = filter(ar(i,:),1,s(start:endp),mem);
 end
+start = endp+1;
+endp = ns;
 e(start:endp) = filter(ar(nf-1,:),1,s(start:endp),mem);
 
 end

@@ -39,13 +39,20 @@ pm_y = round(pm_y*fs)+1;
 % Y_lpc = Y_lpc(index,:); % Update Y_lpc
 
 %%
-% [X_lpc,Y_lpc,~,tfx] = lpcdtw(x,y,pm_x,pm_y);
-e1 = lpcifilt2(x,X_lpc,tfx);     % Exitation
-% x_y = lpcfilt2(e1,Y_lpc,tfx);    % Synthesis
+[X_lpc,Y_lpc,index] = lpcdtw(x,y,pm_x,pm_y);
+e_x = lpcifilt2(x,X_lpc,pm_x);     % Exitation
+e_y = lpcifilt2(y,Y_lpc,pm_y);     % Exitation
+% x_y = lpcfilt2(e_x,Y_lpc(index,:),pm_x);    % Synthesis
+[y_yx,exct]=psolasynth(length(e_x),e_y,pm_x,pm_y,length(X_lpc),Y_lpc,index);
+
+% e2 = 0.02*randn(length(e_x),1);
+% e_x = lpcfilt2(e2,X_lpc,pm_x);    % Synthesis
+% e_y = lpcfilt2(e2,Y_lpc,pm_x);    % Synthesis
 
 %% PLOTS
 
 x_y = x_y-mean(x_y);
+y_yx = y_yx-mean(y_yx);
 % x_y(x_y>0.5) = 0.5;
 % x_y(x_y<-0.5) = -0.5;
 % 
@@ -57,10 +64,11 @@ subplot(3,1,2)
 plot(y)
 title('Target')
 subplot(3,1,3)
-plot(x_y)
+plot(y_yx)
 title('Converted')
 %%
 
 
-wavwrite(x_y,fs,'data/test_2.wav')
+wavwrite(y_yx,fs,'data/test_psola.wav')
 % soundsc(x_y,fs);
+% soundsc(y_yx,fs);

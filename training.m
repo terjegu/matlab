@@ -4,12 +4,12 @@ close all;
 clear all;
 
 %% Load GMM
-load 'gmm128';
+load 'gmm32';
 load 'wavfiles';
-N = 20e3;          % Number of training vectors
+N = 40e3;          % Number of training vectors
 
 %% Compute V and Gamma
-p = length(X_lsf(1,:));
+p = gm_obj.NDimensions;
 m = gm_obj.NComponents;
 P = posterior(gm_obj,X_lsf(1:N,:)); % Posterior probability
 
@@ -24,8 +24,8 @@ V = zeros(m,p);
 Gamma = zeros(m,p);
 
 for k=1:p
-	[V(:,k),Gamma(:,k)] = param(k,m,P,X_lsf(1:N,:),Y_lsf(1:N,:),gm_obj,sigma_diag); 
+	[V(:,k),Gamma(:,k)] = param(k,P,X_lsf(1:N,:),Y_lsf(1:N,:),gm_obj,sigma_diag); 
 end
 
 %% Save Data
-save('variables128_20k','V','Gamma','sigma_diag');
+save('variables32_40k','V','Gamma','sigma_diag');

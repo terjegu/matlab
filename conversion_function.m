@@ -2,29 +2,32 @@
 % Terje Gundersen 13.10.2009
 close all;
 clear all;
-load 'variables32_20k';
-load 'gmm32';
+load 'variables256_40k';
+load 'gmm256';
 
 %% Read files
-filename = 's004987';
-[x,fs]=wavread(['data/source/t03',filename,'.wav']);
+filename = 's074162';
+% filename = 's027328';
+[x,fs] = wavread(['data/source/t03',filename,'.wav']);
 [pm,~] = textread(['data/source_pm/t03',filename,'.pm'],'%f%f','headerlines',9);
 pm_x = pm*fs;
 
 % Read target for testing
-[y,fs_y]=wavread(['data/target/t01',filename,'.wav']); % target
+[y,fs_y] = wavread(['data/target/t01',filename,'.wav']); % target
 [pm_y,~] = textread(['data/target_pm/t01',filename,'.pm'],'%f%f','headerlines',9);
 pm_y = pm_y*fs;
 
 %% Compute LPC vectors
-nfx = length(pm_x);
-lenx = [pm_x(1); pm_x(2:nfx-1)-pm_x(1:nfx-2)];
-analx = [pm_x(2); pm_x(3:nfx-1)-pm_x(1:nfx-3); length(x)-pm_x(nfx-1)]-1;
-skipx = zeros(nfx-1,1);
-tfx = [lenx analx skipx];
-
 p = 16;                         % LPC order (Fs/1000)
-X_lpc = lpcauto(x,p,tfx); % LPC matrix
+[X_lpc,Y_lpc,index] = lpcdtw(x,y,pm_x,pm_y);
+
+% p = 16;                         % LPC order (Fs/1000)
+% nfx = length(pm_x);
+% lenx = [pm_x(1); pm_x(2:nfx-1)-pm_x(1:nfx-2)];
+% analx = max(256*ones(nfx-1,1),[pm_x(2);pm_x(3:nfx-1)-pm_x(1:nfx-3);length(x)-pm_x(nfx-2)]-1);
+% skipx = zeros(nfx-1,1);
+% tfx = [lenx analx skipx];
+% X_lpc = lpcauto(x,p,tfx);
 
 %% Convert LPC to LSF
 fn = length(X_lpc);
@@ -33,8 +36,8 @@ for i=1:fn
     X_lsf(i,:) = poly2lsf(X_lpc(i,:));
 end
 
-%% Conversion function
 P = posterior(gm_obj,X_lsf); % Posterior probability
+%% Conversion function
 X_conv = zeros(fn,p);
 for i=1:fn
     for k=1:p
@@ -42,17 +45,25 @@ for i=1:fn
             gm_obj.mu(:,k)).*sigma_diag(:,k)+V(:,k))');
     end
 end
-%% Reconstruct 
-X_lpc_conv = zeros(fn,p+1);             % LSF to LPC
+
+%% LSF to LPC
+X_lpc_conv = zeros(fn,p+1);
 for i=1:fn
-%     X_conv(X_conv<0)=0;
-%     X_conv(X_conv>=pi)=pi*0.999;
     X_lpc_conv(i,:) = lsf2poly(X_conv(i,:));
 end
 
 
-% e1 = lpcifilt2(x,X_lpc,pm_x);     % Exitation
-% x_y = lpcfilt2(e1,X_lpc_conv,pm_x);    % Synthesis
+% e_x = lpcifilt2(x,X_lpc,pm_x);     % Exitation
+% x_y = lpcfilt2(e_x,X_lpc_conv,pm_x);    % Synthesis
+
+% e_y = lpcifilt2(y,Y_lpc,pm_y);     % Exitation
+% x_y = lpcfilt2(e_x,Y_lpc(index,:),pm_x);    % Synthesis
+% [y_yx,exct]=psolasynth(length(e_x),e_y,pm_x,pm_y,length(X_lpc),Y_lpc,index);
+% Y_lpc = Y_lpc(index,:);
+% e = 0.01*randn(size(x));
+% x_e = lpcfilt2(e,X_lpc,pm_x);    % Synthesis
+% y_e = lpcfilt2(e,Y_lpc,pm_x);    % Synthesis
+
 
 % overlap = anal-len;                   % end frame1 - start frame2 + 1,
 % floor(overlap/2)
@@ -65,15 +76,117 @@ end
 % x_y = concat_overlap(X2,len,anal-len); % matrix to vector
 
 %% Write to file
-% x_y(x_y>=1) = 0.999;                    % Prevent clipping
-% x_y(x_y<-1) = -1;
+
 % x_y = x_y-mean(x_y);
 
-[~,Y_lpc,index] = lpcdtw(x,y,pm_x,pm_y);
+% x_e = x_e-mean(x_e);
+% y_e = y_e-mean(y_e);
+% x_y(x_y>=1) = 0.999;                    % Prevent clipping
+% x_y(x_y<-1) = -1;
+% x_e = x_e/max(abs(x_e));
+% y_e = y_e/max(abs(y_e));
+
+% [~,Y_lpc,index] = lpcdtw(x,y,pm_x,pm_y);
 Y_lpc = Y_lpc(index,:);
-dist = mean(distitar(Y_lpc,X_lpc_conv))
-% wavwrite(x_y,fs,'data/test_conv128.wav')
+dist = distitar(Y_lpc,X_lpc_conv);
+[mindistance,minindex] = min(dist);
+% wavwrite(x_e,fs,'data/test_x_e.wav')
+% wavwrite(y_e,fs,'data/test_y_e.wav')
+% wavwrite(x_y,fs,'data/s051965_converted.wav')
+% soundsc(x_y,fs);
 % save('X_conv128','X_lpc_conv');
+
+
+%% Plot one lpc frame
+nfx = length(pm_x);
+lenx = [pm_x(1); pm_x(2:nfx-1)-pm_x(1:nfx-2)];
+analx = max(256*ones(nfx-1,1),[pm_x(2);pm_x(3:nfx-1)-pm_x(1:nfx-3);length(x)-pm_x(nfx-2)]-1);
+skipx = zeros(nfx-1,1);
+tfx = [lenx analx skipx];
+
+frame_num = minindex;
+N = round(tfx(frame_num,1));
+NFFT = pow2(nextpow2(N));
+t = (1:N)/fs*1000;
+frame = (N*frame_num+1:N*(frame_num+1));
+
+[X_freqz,f_x] = freqz(1,X_lpc(frame_num,:),NFFT,fs);
+[Y_freqz,f_y] = freqz(1,Y_lpc(frame_num,:),NFFT,fs);
+[X2_freqz,f_x2] = freqz(1,X_lpc_conv(frame_num,:),NFFT,fs);
+
+
+p_axis = [0 8 -1 2];
+
+figure(6)
+subplot(311);
+plot(f_x/1000,log10(abs(X_freqz)),'g');
+title('Source');
+ylabel('dB');
+axis(p_axis);
+subplot(312);
+plot(f_y/1000,log10(abs(Y_freqz)),'r');
+title('Target');
+ylabel('dB');
+axis(p_axis);
+subplot(313);
+plot(f_x2/1000,log10(abs(X2_freqz)));
+title('Converted');
+xlabel('f [kHz]');
+ylabel('dB');
+axis(p_axis);
+
+figure(7)
+plot(f_x2/1000,log10(abs(X_freqz)),'g');
+hold on;
+plot(f_x2/1000,log10(abs(Y_freqz)),'r');
+plot(f_x2/1000,log10(abs(X2_freqz)));
+xlabel('f [kHz]');
+ylabel('dB');
+axis(p_axis);
+legend('Source','Target','Converted');
+
+
+
+%% Compare GMM
+% save('s047225_32','X2_freqz');
+% load('s047225_32');
+% X_32 = X2_freqz;
+% load('s047225_64');
+% X_64 = X2_freqz;
+% load('s047225_128');
+% X_128 = X2_freqz; 
+% 
+% figure(8)
+% subplot(311);
+% plot(f_x2/1000,log10(abs(X_32)));
+% title('32 GMM');
+% % xlabel('f [kHz]');
+% ylabel('dB');
+% axis(p_axis);
+% subplot(312);
+% plot(f_x2/1000,log10(abs(X_64)));
+% title('64 GMM');
+% % xlabel('f [kHz]');
+% ylabel('dB');
+% axis(p_axis);
+% subplot(313);
+% plot(f_x2/1000,log10(abs(X_128)));
+% title('128 GMM');
+% xlabel('f [kHz]');
+% ylabel('dB');
+% axis(p_axis);
+
+% figure(9)
+% plot(f_x2/1000,log10(abs(X_32)));
+% hold on;
+% plot(f_x2/1000,log10(abs(X_64)),'r');
+% plot(f_x2/1000,log10(abs(X_128)),'g');
+% xlabel('f [kHz]');
+% ylabel('dB');
+% axis(p_axis);
+% legend('32 GMM','64 GMM','128 GMM');
+
+
 
 %% Plot complete signal
 % y=wavread('data/t01s000228.wav');   % target
@@ -133,112 +246,3 @@ dist = mean(distitar(Y_lpc,X_lpc_conv))
 % title('Frequency domain');
 % xlabel('f [kHz]');
 % ylabel('dB');
-
-%% Plot one lpc frame
-% [y,fs_y]=wavread('data/t01s000228.wav'); % target
-% [pm_y,~] = textread('data/t01s000228.txt','%f%f');
-% pm_y = pm_y*fs;
-% 
-% [~,Y_lpc,index] = lpcdtw(x,y,pm_x,pm_y);
-% Y_lpc = Y_lpc(index,:);
-% % Y_s = split(y,len,0);       % Vector to matrix
-% % Y_s = Y_s(index);
-% % temp = Y_s';
-% % y2 = temp(:);                   % matrix to vector
-% 
-% frame_num = 50;
-% N = tfx(frame_num,1);
-% NFFT = pow2(nextpow2(N));
-% t = (1:N)/fs*1000;
-% frame = (N*frame_num+1:N*(frame_num+1));
-% 
-% [X_freqz,f_x] = freqz(1,X_lpc(frame_num,:),NFFT,fs);
-% [Y_freqz,f_y] = freqz(1,Y_lpc(frame_num,:),NFFT,fs);
-% [X2_freqz,f_x2] = freqz(1,X_lpc_conv(frame_num,:),NFFT,fs);
-
-% 
-% figure(5)
-% subplot(311);
-% plot(t,x(frame),'g');
-% title('Source, time domain');
-% xlabel('t [ms]');
-% subplot(312);
-% plot(t,y(frame),'r'); % y before dtw, not correct
-% title('Target, time domain');
-% xlabel('t [ms]');
-% subplot(313);
-% plot(t,x_y(frame));
-% title('Converted, time domain');
-% xlabel('t [ms]');
-
-
-% subplot(313);
-% plot(t,e(frame));
-% title('Exitation');
-% xlabel('f [kHz]');
-
-
-% p_axis = [0 8 -1 2];
-% 
-% figure(6)
-% subplot(311);
-% plot(f_x/1000,log10(abs(X_freqz)),'g');
-% title('Source');
-% ylabel('dB');
-% axis(p_axis);
-% subplot(312);
-% plot(f_y/1000,log10(abs(Y_freqz)),'r');
-% title('Target');
-% ylabel('dB');
-% axis(p_axis);
-% subplot(313);
-% plot(f_x2/1000,log10(abs(X2_freqz)));
-% title('Converted');
-% xlabel('f [kHz]');
-% ylabel('dB');
-% axis(p_axis);
-
-% 
-% figure(7)
-% hold on;
-% plot(f_x/1000,log10(abs(X_freqz)),'g');
-% plot(f_y/1000,log10(abs(Y_freqz)),'r');
-% plot(f_x2/1000,log10(abs(X2_freqz)));
-% title('Source');
-% legend('Source','Target','Converted');
-% xlabel('f [kHz]');
-% ylabel('dB');
-% hold off;
-
-%% Compare GMM
-% save('x2_128','X2_freqz');
-% % 
-% figure(8)
-% load('x2_32');
-% subplot(311);
-% plot(f_x2/1000,log10(abs(X2_freqz)));
-% title('32 GMM');
-% % xlabel('f [kHz]');
-% ylabel('dB');
-% axis(p_axis);
-% load('x2_64');
-% subplot(312);
-% plot(f_x2/1000,log10(abs(X2_freqz)));
-% title('64 GMM');
-% % xlabel('f [kHz]');
-% ylabel('dB');
-% axis(p_axis);
-% load('x2_128');
-% subplot(313);
-% plot(f_x2/1000,log10(abs(X2_freqz)));
-% title('128 GMM');
-% xlabel('f [kHz]');
-% ylabel('dB');
-% axis(p_axis);
-
-%%
-% SM = distitar(X_lpc_conv,Y_lpc);
-% SM = SM./(max(SM(:))+0.1);
-% 
-% % Use dynamic programming to find the lowest-cost path
-% [p1,q1,D] = dp2(1-SM);

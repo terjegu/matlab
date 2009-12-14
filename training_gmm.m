@@ -5,22 +5,23 @@ clear all;
 load('wavfiles');
 
 %% Train GMM with EM-algorithm and kmeans for initialisation 
-m = 128;                         % Number of mixtures
+m = 512;                         % Number of mixtures
 p = 16;                         % LPC order (Fs/1000)
 [S.mu,~,J]=kmeans(X_lsf,m);     % VQ
 
 sigma_lb = 1e-5;                % lower bound for Sigma
+N_j = length(J);
 S.Sigma = zeros(1,p,m);         % Variance of each cluster
 S.PComponents = zeros(1,m);     % Prior of each cluster
 for i=1:m
     S.Sigma(1,:,i) = max(sigma_lb,var(X_lsf(J==i,:)));
-    S.PComponents(1,i) = sum(J==i)/length(J);
+    S.PComponents(1,i) = sum(J==i)/N_j;
 end
 
 % GMM with EM
-opt = statset('Display','iter','MaxIter',200);
+opt = statset('Display','iter','MaxIter',250);
 gm_obj = gmdistribution.fit(X_lsf,m,'CovType','diagonal','Start',S,'Regularize',sigma_lb,'Options',opt);
 
 
 %% Save variables
-save('gmm128','gm_obj');
+save('gmm512','gm_obj');

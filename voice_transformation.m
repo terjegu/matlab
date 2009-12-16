@@ -1,4 +1,4 @@
-function dist=voice_transformation(Ngmm,Ntrain,filename)
+function [x_y,dist]=voice_transformation(Ngmm,Ntrain,filename)
 % [x_y,dist]=voice_transformation(Ngmm,Ntrain,filename)
 % Returns the transformed speech signal x_y and the an Itakura distance
 % vector dist
@@ -35,7 +35,8 @@ for i=1:fn
     X_lsf(i,:) = poly2lsf(X_lpc(i,:));
 end
 
-P = posterior(gm_obj,X_lsf); % Posterior probability
+% Posterior probability matrix
+P = posterior(gm_obj,X_lsf); 
 
 % Conversion function
 X_conv = zeros(fn,p);

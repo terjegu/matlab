@@ -4,9 +4,9 @@ close all;
 clear all;
 
 %% Load GMM
-load 'gmm32';
+load 'gmm128';
 load 'wavfiles';
-N = 40e3;          % Number of training vectors
+N = 641;          % Number of training vectors
 
 %% Compute V and Gamma
 p = gm_obj.NDimensions;
@@ -28,4 +28,4 @@ for k=1:p
 end
 
 %% Save Data
-save('variables32_40k','V','Gamma','sigma_diag');
+save('variables128_test','V','Gamma','sigma_diag');

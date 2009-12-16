@@ -6,8 +6,8 @@ load 'variables256_40k';
 load 'gmm256';
 
 %% Read files
-filename = 's074162';
-% filename = 's027328';
+% filename = 's000228';
+filename = 's027328';
 [x,fs] = wavread(['data/source/t03',filename,'.wav']);
 [pm,~] = textread(['data/source_pm/t03',filename,'.pm'],'%f%f','headerlines',9);
 pm_x = pm*fs;
@@ -90,6 +90,8 @@ end
 Y_lpc = Y_lpc(index,:);
 dist = distitar(Y_lpc,X_lpc_conv);
 [mindistance,minindex] = min(dist);
+% distmean = mean(dist)
+% distvar = sqrt(var(dist))
 % wavwrite(x_e,fs,'data/test_x_e.wav')
 % wavwrite(y_e,fs,'data/test_y_e.wav')
 % wavwrite(x_y,fs,'data/s051965_converted.wav')
@@ -115,27 +117,27 @@ frame = (N*frame_num+1:N*(frame_num+1));
 [X2_freqz,f_x2] = freqz(1,X_lpc_conv(frame_num,:),NFFT,fs);
 
 
-p_axis = [0 8 -1 2];
+p_axis = [0 8 -1 3];
+
+% figure(6)
+% subplot(311);
+% plot(f_x/1000,log10(abs(X_freqz)),'g');
+% title('Source');
+% ylabel('dB');
+% axis(p_axis);
+% subplot(312);
+% plot(f_y/1000,log10(abs(Y_freqz)),'r');
+% title('Target');
+% ylabel('dB');
+% axis(p_axis);
+% subplot(313);
+% plot(f_x2/1000,log10(abs(X2_freqz)));
+% title('Converted');
+% xlabel('f [kHz]');
+% ylabel('dB');
+% axis(p_axis);
 
 figure(6)
-subplot(311);
-plot(f_x/1000,log10(abs(X_freqz)),'g');
-title('Source');
-ylabel('dB');
-axis(p_axis);
-subplot(312);
-plot(f_y/1000,log10(abs(Y_freqz)),'r');
-title('Target');
-ylabel('dB');
-axis(p_axis);
-subplot(313);
-plot(f_x2/1000,log10(abs(X2_freqz)));
-title('Converted');
-xlabel('f [kHz]');
-ylabel('dB');
-axis(p_axis);
-
-figure(7)
 plot(f_x2/1000,log10(abs(X_freqz)),'g');
 hold on;
 plot(f_x2/1000,log10(abs(Y_freqz)),'r');
